@@ -22,14 +22,17 @@ documents.
 - [Quick start](#quick-start)
 - [External services and credentials](#external-services-and-credentials)
 - [PostgreSQL and Qdrant bootstrap](#postgresql-and-qdrant-bootstrap)
+- [Bootstrap from zero](docs/BOOTSTRAP.md)
 - [Installation and build](#installation-and-build)
 - [Configuration](#configuration)
 - [Read-only preflight](#read-only-preflight)
 - [First controlled run](#first-controlled-run)
 - [Nightly deployment](#nightly-deployment)
+- [Production deployment guide](docs/DEPLOYMENT.md)
 - [Advanced operations and internals](#advanced-operations-and-internals)
 - [Troubleshooting](#troubleshooting)
 - [Security and data responsibilities](#security-and-data-responsibilities)
+- [Security policy](SECURITY.md)
 - [License](#license)
 - [Contributing](#contributing)
 
@@ -65,32 +68,39 @@ The component provides:
 
 It deliberately does **not** provide:
 
-- PostgreSQL or Qdrant provisioning;
+- managed PostgreSQL or Qdrant services, backups, or operator accounts;
 - source-portal or embedding-provider accounts;
 - legal classification beyond fields proven by the source contract;
 - a retrieval API, ranking engine, user interface, or legal advice;
 - authoritative global withdrawal detection; or
 - automatic unbounded historical repair.
 
-The wider Slovenian component map is maintained in the
-[`OpenLegalCore/slovenia`](https://github.com/OpenLegalCore/slovenia) architecture hub.
+The repository does include a minimal application-owned PostgreSQL schema and exact Qdrant
+collection contract for an empty forward-only deployment. It does not attempt to manage the wider
+infrastructure lifecycle.
 
 ## Current status
 
-- Package and release candidate: **v0.1.6**.
-- Engineering status: **technically and production-path validated**.
-- Publication status: **private until separately authorized**.
+- Current public release: **v0.1.6**.
+- Engineering status: **production-verified**.
+- Publication status: **public source-available release since 23 August 2026**.
 - License status: **source-available under BUSL-1.1 before the applicable Change Date**.
 
-The controlled production path, local canary, deterministic idempotent rerun,
-PostgreSQL/Qdrant convergence, embedding batching, and success-only checkpoint path have been
-validated. This README does not claim that a post-deployment timer-triggered v0.1.6 run has
-completed; natural scheduled operation remains separate operational evidence.
+The accepted v0.1.6 path covered PostgreSQL-backed overlap reconciliation, bounded source detail
+and embedding work, Qdrant repair, success-only checkpoints, staged recovery, a timer-triggered
+installed-service run, and a real persistent-timer catch-up. Both final timer-driven runs exited
+successfully with all 2,826 overlap candidates reconstructed from PostgreSQL and zero source-detail,
+embedding, PostgreSQL-document, or Qdrant mutation work. The real timer remained enabled and
+waiting for its next 04:30 Europe/Ljubljana trigger.
+
+That evidence validates the reviewed deployment and exact contracts. It does not imply that every
+third-party version, source entitlement, initial interval, or infrastructure layout is compatible.
 
 ## Quick start
 
 This quick start validates the program against **already compatible** PostgreSQL and Qdrant
-targets. It stops at a read-only preflight. Do not run the mutating command until you have reviewed
+targets and stops at a read-only preflight. For a new empty environment, complete
+[`docs/BOOTSTRAP.md`](docs/BOOTSTRAP.md) first. Do not run a mutating command until you have reviewed
 the first-run checklist below.
 
 ### 1. Install the toolchain
@@ -101,7 +111,7 @@ You need Linux, Git, [`uv`](https://docs.astral.sh/uv/), and exactly CPython 3.1
 git clone https://github.com/OpenLegalCore/slovenia-sodnapraksa-ingest.git
 cd slovenia-sodnapraksa-ingest
 uv python install 3.12.3
-uv sync --locked
+uv sync --locked --no-dev
 uv run sodnapraksa-ingest --help
 ```
 
@@ -169,15 +179,20 @@ downstream use comply with the source operator's terms and applicable law.
 
 ### Supported starting states
 
-The current implementation expects either:
+The current implementation supports:
 
-1. an existing PostgreSQL database with the compatible case-law schema and an existing compatible
-   Qdrant collection; or
-2. a PostgreSQL/Qdrant state restored from a future matching `slovenia-database` snapshot release.
+1. an empty **forward-only** deployment created with the tracked PostgreSQL schema and Qdrant
+   contract in [`docs/BOOTSTRAP.md`](docs/BOOTSTRAP.md);
+2. an existing target that passes the complete preflight and first-run audit; or
+3. PostgreSQL, Qdrant, and checkpoint state restored as one matching operator-verified set.
 
-This repository does not currently ship schema migrations, create a database, create service
-accounts, or create the Qdrant collection. Until a compatible bootstrap artifact or snapshot is
-published, a completely empty deployment is **not** a supported quick-start path.
+The repository does not create infrastructure services, accounts, credentials, backups, or an
+unbounded historical corpus. A historical import must be divided into reviewed fixed-end stages
+that each remain inside all three runtime budgets.
+
+The PostgreSQL bootstrap is deliberately a single declarative table, not a migration framework.
+Run it only against an empty database. Existing targets must be inspected rather than altered
+implicitly.
 
 ### Established Qdrant contract
 
@@ -241,8 +256,8 @@ Use a new output directory and verify both archives before deployment. Do not de
 
 Copy [`.env.example`](.env.example) to a private file outside the repository for production. Every
 required value is parsed before files, network connections, or stores are opened. Placeholders are
-rejected and there are no production credentials, target identities, paths, budgets, or mutation
-permissions supplied by the runtime.
+rejected. The example records the v0.1.6 collection, model, dimensions, paths, and reviewed reference
+budgets, but supplies no credential, database identity, source boundary, or write authorization.
 
 | Variable | Purpose |
 | --- | --- |
@@ -362,28 +377,34 @@ Repeat read-only preflight and independently compare:
 - source request/retry behavior; and
 - remaining processes, transient units, and held locks.
 
-The same bounded interval should converge without unnecessary embeddings, inserts, timestamp churn,
-or duplicate point identities.
+A later interval must be strictly newer than the checkpoint. Its overlap should reconstruct the
+previously reconciled candidates without repeated source detail, embeddings, inserts, timestamp
+churn, or duplicate point identities. The CLI intentionally rejects `end <= checkpoint`; repeating
+the exact same `--end` is therefore not a valid idempotency test.
 
 ## Nightly deployment
 
-The tracked files in [`deploy/systemd/`](deploy/systemd/) are reviewed templates, not an
-installer. Adapt identity, paths, dependency readiness, hardening, and local service policy before
-copying them to `/etc/systemd/system/`.
+The tracked files in [`deploy/systemd/`](deploy/systemd/) are reviewed hardened templates, not an
+installer. The complete immutable-runtime, cutover, rollback, preflight, supervised-run, and
+immediate timer-acceptance procedure is in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 The documented layout is:
 
 ```text
-/opt/sodnapraksa-ingest/              installed immutable candidate
-/opt/sodnapraksa-ingest/.venv/        installed runtime environment
+/opt/sodnapraksa-ingest/releases/<commit>/   immutable source release
+/opt/sodnapraksa-ingest/runtime/             shared CPython outside user homes
+/opt/sodnapraksa-ingest/.venv.<short>-opt/   immutable release environment
+/opt/sodnapraksa-ingest/.venv                active symlink
 /etc/sodnapraksa-ingest.env           root-owned environment, mode 0600
-/var/lib/sodnapraksa-ingest/          checkpoint state
-/run/sodnapraksa-ingest/              application lock
+/var/lib/sodnapraksa-ingest/          checkpoint state, mode 0700
+/run/sodnapraksa-ingest/              application lock, mode 0700
 ```
 
-The service runs as the dedicated `sodnapraksa-ingest` user and group. Systemd creates the state
-and runtime directories; the environment file must retain the matching absolute checkpoint and
-lock paths.
+The service runs as the dedicated `sodnapraksa-ingest` user and group. It performs read-only
+preflight before the mutating command, applies a restrictive filesystem/process sandbox, and lets
+systemd create the state and runtime directories. The environment file must retain the matching
+absolute checkpoint and lock paths. The active Python interpreter must resolve beneath `/opt`, not
+an operator home hidden by `ProtectHome=true`.
 
 The timer runs every day at **04:30 Europe/Ljubljana**, 90 minutes after the PISRS timer. It uses
 `Persistent=true` and has no random delay.
@@ -402,9 +423,10 @@ sudo systemctl enable --now sodnapraksa-ingest.timer
 sudo systemctl list-timers sodnapraksa-ingest.timer
 ```
 
-Timer activation, the next scheduled trigger, and post-run integrity must be checked separately
-after deployment. This documentation does not treat a manual run as evidence that a later natural
-timer-triggered run completed.
+Timer activation, the next scheduled trigger, and post-run integrity must be checked separately.
+The deployment guide includes a one-shot transient timer acceptance so the installed service path
+can be proven immediately; a later real scheduled or `Persistent=true` catch-up invocation remains
+the final scheduler evidence.
 
 ## Advanced operations and internals
 
@@ -416,6 +438,40 @@ sodnapraksa-ingest preflight
 sodnapraksa-ingest run
 sodnapraksa-ingest run --end UTC_TIMESTAMP
 ```
+
+There is no separate `--version` command. Query the installed package and internal version with:
+
+```bash
+python -c 'from importlib.metadata import version; import sodnapraksa_ingest as p; print(version("sodnapraksa-ingest"), p.__version__)'
+```
+
+A successful run emits one JSON document. Counts are integers and the interval values are
+timezone-aware ISO-8601 strings:
+
+```json
+{
+  "mode": "run",
+  "result": {
+    "checkpoint_advanced": true,
+    "discovery_limit": 5000,
+    "document_limit": 350,
+    "documents": 0,
+    "embedding_input_bytes": 0,
+    "interval_end": "2026-08-24T02:30:00+00:00",
+    "interval_start": "2026-08-17T02:30:00+00:00",
+    "listing_candidates": 0,
+    "payloads_updated": 0,
+    "points_deleted": 0,
+    "postgres_changed": 0,
+    "postgres_reconstructed": 0,
+    "source_details": 0,
+    "vectors_embedded": 0
+  },
+  "status": "ok"
+}
+```
+
+The zero values illustrate the schema only; they are not a prediction for a real interval.
 
 ### Source contract
 
@@ -478,6 +534,17 @@ The checkpoint starts each next interval at the last fully successful end minus 
 overlap, bounded by `SODNAPRAKSA_INITIAL_SINCE`. It advances only after every document and derived
 operation succeeds and is replaced through file `fsync`, atomic rename, and directory `fsync`.
 
+### Module map
+
+| Module | Responsibility |
+| --- | --- |
+| `__init__.py` | Package version and shared ingest error. |
+| `cli.py` | Two commands, fixed-end parsing, policy exits, and JSON output. |
+| `config.py` | Fail-closed environment and endpoint validation. |
+| `source.py` | Source listing/detail access, embedding calls, and bounded retry. |
+| `document.py` | Normalization, hashes, chunks, payloads, and deterministic identities. |
+| `pipeline.py` | PostgreSQL/Qdrant contracts, reconciliation, lock, checkpoint, and linear run. |
+
 ### Exit codes
 
 | Code | Meaning |
@@ -494,8 +561,13 @@ operation succeeds and is replaced through file `fsync`, atomic rename, and dire
 | `configuration_error` / exit `78` | A required value is absent, still a placeholder, or violates a target contract. Correct the private environment file. |
 | `locked` / exit `75` | Another invocation owns the application lock. Find the process; do not infer ownership from file existence alone. |
 | Checkpoint does not advance | Expected after any incomplete run. Preserve evidence, correct the root cause, and rerun the same bounded path. |
+| `run interval is not newer than the checkpoint` | The requested end is equal to or older than the durable checkpoint. Choose a strictly newer reviewed end; overlap provides idempotent rechecking. |
 | Qdrant mismatch or missing point | Confirm model, dimensions, collection, point identity, and PostgreSQL authority before repair. |
+| `Qdrant collection is not healthy` immediately after writes | Background optimization may still be settling. Perform read-only health checks and wait for `green`/optimizer `ok`; do not repeat a mutating run blindly. |
 | Unexpectedly high embedding plan | Stop before enabling writes; inspect changed content, model compatibility, overlap, and byte cap. |
+| systemd preflight still sees write flags enabled | Values passed as transient unit properties can be superseded by `EnvironmentFile`. Put `/usr/bin/env ...=0` in the command after the environment file is loaded, as shown in the deployment guide. |
+| systemd reports exit `126` or `Permission denied` for Python | The virtual environment resolves to an interpreter under a non-traversable home. Rebuild it with the shared `/opt/sodnapraksa-ingest/runtime` interpreter; do not loosen home permissions or the systemd sandbox. |
+| transient preflight cannot create the lock directory | Reproduce `RuntimeDirectory=sodnapraksa-ingest` and mode `0700`, or run the tracked service unit. Do not make `/run` broadly writable. |
 | Source interval seems incomplete | Absence is not withdrawal evidence. Verify source behavior; do not infer deletion from a change interval. |
 
 Do not publish source records, court documents, personal data, credentials, embedding inputs,
@@ -512,8 +584,8 @@ GitHub issue.
 - Keep both authorization flags at `0` except for a specifically approved mutating invocation.
 - Back up authoritative state and test restoration before relying on unattended operation.
 - Confirm source terms and downstream legal/data obligations independently of this software.
-- Report suspected vulnerabilities privately through an established OpenLegalCore contact channel;
-  do not publish sensitive details before coordinated contact is confirmed.
+- Report suspected vulnerabilities through the private process in [`SECURITY.md`](SECURITY.md);
+  never publish sensitive details in an issue or pull request.
 
 ## License
 

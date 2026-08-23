@@ -1,0 +1,29 @@
+name: sodnapraksa-ingest-dev
+
+services:
+  postgres:
+    image: postgres:18.3@sha256:7e32e9833a6fb1c92c32552794cb6ed569d51b445a54907d35fc112ef39684db
+    environment:
+      POSTGRES_DB: sodnapraksa
+      POSTGRES_PASSWORD: ${SODNAPRAKSA_DEV_POSTGRES_PASSWORD:?set a private development password}
+      POSTGRES_USER: sodnapraksa_ingest
+    ports:
+      - 127.0.0.1:5432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U sodnapraksa_ingest -d sodnapraksa]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+  qdrant:
+    image: qdrant/qdrant:v1.17.1@sha256:94728574965d17c6485dd361aa3c0818b325b9016dac5ea6afec7b4b2700865f
+    ports:
+      - 127.0.0.1:6333:6333
+    volumes:
+      - qdrant-data:/qdrant/storage
+
+volumes:
+  postgres-data:
+  qdrant-data:

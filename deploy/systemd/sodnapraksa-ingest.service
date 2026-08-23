@@ -2,6 +2,7 @@
 Description=OpenLegalCore sodnapraksa ingest
 Wants=network-online.target
 After=network-online.target
+ConditionPathExists=/etc/sodnapraksa-ingest.env
 
 [Service]
 Type=oneshot
@@ -9,11 +10,19 @@ User=sodnapraksa-ingest
 Group=sodnapraksa-ingest
 WorkingDirectory=/opt/sodnapraksa-ingest
 EnvironmentFile=/etc/sodnapraksa-ingest.env
-ExecStart=/opt/sodnapraksa-ingest/.venv/bin/sodnapraksa-ingest run
 StateDirectory=sodnapraksa-ingest
-StateDirectoryMode=0750
+StateDirectoryMode=0700
 RuntimeDirectory=sodnapraksa-ingest
-RuntimeDirectoryMode=0750
-UMask=0027
+RuntimeDirectoryMode=0700
+ExecStartPre=/usr/bin/env SODNAPRAKSA_ALLOW_EXTERNAL_API=0 SODNAPRAKSA_ALLOW_WRITES=0 /opt/sodnapraksa-ingest/.venv/bin/sodnapraksa-ingest preflight
+ExecStart=/usr/bin/env SODNAPRAKSA_ALLOW_EXTERNAL_API=1 SODNAPRAKSA_ALLOW_WRITES=1 /opt/sodnapraksa-ingest/.venv/bin/sodnapraksa-ingest run
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/sodnapraksa-ingest /run/sodnapraksa-ingest
+TimeoutStartSec=4h
+Restart=no
 StandardOutput=journal
 StandardError=journal
