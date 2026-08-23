@@ -4,9 +4,10 @@ This guide provisions the application-owned PostgreSQL table and Qdrant collecti
 `sodnapraksa-ingest`. It is for a new deployment with no case-law state. It does not create source
 or embedding-provider accounts and it does not perform an unbounded historical import.
 
-The validated production combination for v0.1.6 is CPython 3.12.3, PostgreSQL 18.3, and Qdrant
-1.17.1. Other maintained PostgreSQL and Qdrant releases may work, but must pass the same preflight
-and controlled-run acceptance before unattended use.
+The production-validated runtime baseline, established with v0.1.6 and retained by the
+logic-identical v0.1.7 package, is CPython 3.12.3, PostgreSQL 18.3, and Qdrant 1.17.1. Other
+maintained PostgreSQL and Qdrant releases may work, but must pass the same preflight and
+controlled-run acceptance before unattended use.
 
 ## 1. Choose the starting mode
 

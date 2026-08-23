@@ -125,7 +125,7 @@ wheels = [
 
 [[package]]
 name = "sodnapraksa-ingest"
-version = "0.1.6"
+version = "0.1.7"
 source = { editable = "." }
 dependencies = [
     { name = "psycopg", extra = ["binary"] },

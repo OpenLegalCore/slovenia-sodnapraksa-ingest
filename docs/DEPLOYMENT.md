@@ -24,12 +24,12 @@ into an operator's home directory is incompatible with `ProtectHome=true` and th
 
 ## 1. Verify the candidate
 
-Use a fresh clone and an exact signed-off ref. For the first public production build:
+Use a fresh clone and an exact signed-off ref. For the current public production-compatible build:
 
 ```bash
 git clone https://github.com/OpenLegalCore/slovenia-sodnapraksa-ingest.git
 cd slovenia-sodnapraksa-ingest
-release_ref=v0.1.6
+release_ref=v0.1.7
 git checkout --detach "$release_ref"
 release_commit="$(git rev-parse HEAD)"
 git diff --exit-code
@@ -49,6 +49,9 @@ sha256sum "$build_output"/*
 
 Compare the commit, tree, filenames, sizes, hashes, version, BUSL metadata, LICENSE, and manifests
 with the approved release record. Never deploy a stale `dist/` directory.
+
+Version 0.1.7 changes documentation, release metadata, and the repository Python pin only. Its
+ingestion logic is identical to the production-accepted v0.1.6 implementation.
 
 ## 2. Install the shared interpreter and immutable environment
 
