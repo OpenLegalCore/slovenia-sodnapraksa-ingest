@@ -13,6 +13,11 @@ license-files = ["LICENSE"]
 authors = [{ name = "Rajko Majcen" }]
 dependencies = ["psycopg[binary]>=3.3,<3.4"]
 
+[project.urls]
+Documentation = "https://github.com/OpenLegalCore/slovenia-sodnapraksa-ingest#readme"
+Issues = "https://github.com/OpenLegalCore/slovenia-sodnapraksa-ingest/issues"
+Repository = "https://github.com/OpenLegalCore/slovenia-sodnapraksa-ingest"
+
 [project.optional-dependencies]
 dev = ["pytest>=8.3,<9", "ruff>=0.9,<1"]
 
@@ -23,7 +28,17 @@ sodnapraksa-ingest = "sodnapraksa_ingest.cli:main"
 packages = ["src/sodnapraksa_ingest"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/src", "/LICENSE", "/README.md", "/pyproject.toml"]
+include = [
+  "/src",
+  "/deploy",
+  "/docs",
+  "/.env.example",
+  "/CONTRIBUTING.md",
+  "/LICENSE",
+  "/README.md",
+  "/SECURITY.md",
+  "/pyproject.toml",
+]
 
 [tool.pytest.ini_options]
 addopts = "-q"
