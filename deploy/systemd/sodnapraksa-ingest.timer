@@ -1,0 +1,11 @@
+[Unit]
+Description=Run OpenLegalCore sodnapraksa ingest daily
+
+[Timer]
+OnCalendar=*-*-* 04:30:00 Europe/Ljubljana
+Persistent=true
+RandomizedDelaySec=0
+Unit=sodnapraksa-ingest.service
+
+[Install]
+WantedBy=timers.target

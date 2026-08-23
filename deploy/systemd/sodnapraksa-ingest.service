@@ -1,0 +1,19 @@
+[Unit]
+Description=OpenLegalCore sodnapraksa ingest
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=sodnapraksa-ingest
+Group=sodnapraksa-ingest
+WorkingDirectory=/opt/sodnapraksa-ingest
+EnvironmentFile=/etc/sodnapraksa-ingest.env
+ExecStart=/opt/sodnapraksa-ingest/.venv/bin/sodnapraksa-ingest run
+StateDirectory=sodnapraksa-ingest
+StateDirectoryMode=0750
+RuntimeDirectory=sodnapraksa-ingest
+RuntimeDirectoryMode=0750
+UMask=0027
+StandardOutput=journal
+StandardError=journal
