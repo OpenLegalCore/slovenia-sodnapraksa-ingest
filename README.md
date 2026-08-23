@@ -81,7 +81,7 @@ infrastructure lifecycle.
 
 ## Current status
 
-- Current public release: **v0.1.6**.
+- Current public release: **v0.1.7**.
 - Engineering status: **production-verified**.
 - Publication status: **public source-available release since 23 August 2026**.
 - License status: **source-available under BUSL-1.1 before the applicable Change Date**.
@@ -92,6 +92,9 @@ installed-service run, and a real persistent-timer catch-up. Both final timer-dr
 successfully with all 2,826 overlap candidates reconstructed from PostgreSQL and zero source-detail,
 embedding, PostgreSQL-document, or Qdrant mutation work. The real timer remained enabled and
 waiting for its next 04:30 Europe/Ljubljana trigger.
+
+Version 0.1.7 is a documentation and release-metadata update. Its ingestion logic is unchanged
+from the production-accepted v0.1.6 implementation.
 
 That evidence validates the reviewed deployment and exact contracts. It does not imply that every
 third-party version, source entitlement, initial interval, or infrastructure layout is compatible.
@@ -256,8 +259,9 @@ Use a new output directory and verify both archives before deployment. Do not de
 
 Copy [`.env.example`](.env.example) to a private file outside the repository for production. Every
 required value is parsed before files, network connections, or stores are opened. Placeholders are
-rejected. The example records the v0.1.6 collection, model, dimensions, paths, and reviewed reference
-budgets, but supplies no credential, database identity, source boundary, or write authorization.
+rejected. The example records the validated collection, model, dimensions, paths, and reviewed
+reference budgets, but supplies no credential, database identity, source boundary, or write
+authorization.
 
 | Variable | Purpose |
 | --- | --- |
@@ -591,7 +595,7 @@ GitHub issue.
 
 Copyright (c) 2026 Rajko Majcen.
 
-Version 0.1.6 is licensed under the Business Source License 1.1 (`BUSL-1.1`) until its Change
+Version 0.1.7 is licensed under the Business Source License 1.1 (`BUSL-1.1`) until its Change
 Date. It is source-available before that date and **not an Open Source license**.
 
 Only production uses expressly granted in the complete [`LICENSE`](LICENSE) are permitted without
