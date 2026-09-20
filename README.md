@@ -10,6 +10,13 @@ It is a focused ingestion and integrity-maintenance utility. It is not a legal s
 chatbot, a legal-analysis engine, or a replacement for professional verification of source
 documents.
 
+| Public record | Current value |
+| --- | --- |
+| Component status | Public, production-verified, source-available |
+| Current release | [v0.1.7](https://github.com/OpenLegalCore/slovenia-sodnapraksa-ingest/releases/tag/v0.1.7) |
+| Licence | [BUSL-1.1](LICENSE) before the applicable Change Date |
+| Project component record | [Slovenian Case Law Pipeline](https://openlegalcore.org/components/slovenian-case-law/) |
+
 > [!IMPORTANT]
 > This is an independent project. It is not an official project of the Slovenian judiciary, the
 > Republic of Slovenia, or the operator of `sodnapraksa.si`. The software does not include source
